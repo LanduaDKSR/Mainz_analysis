@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 import math
+from geojson import LineString as geoLS
 
-"""
+
 def trip_layer(data):
     geo_list = pd.DataFrame(np.zeros((len(data)),dtype=object),columns=['geo_json'])                          
     for i in range(0,len(data)):                       
@@ -12,7 +13,7 @@ def trip_layer(data):
         list2 = np.insert(list1,3,data['timestamps_list'][i],axis=1)       
         geo_list.iloc[i] = [geoLS(list2.tolist())]
     return geo_list
-"""
+
 
 def geo_distance(point1, point2):
     R = 6378.137 # Radius of earth in KM
