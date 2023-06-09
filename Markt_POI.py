@@ -13,6 +13,7 @@ import math
 from PIL import Image
 import altair as alt
 import markt_config
+import streamlit_toggle as tog
 
 from functions import trip_layer, point_of_interest
 
@@ -37,7 +38,7 @@ def load_data():
     df = pd.read_csv('Markt_Tag.csv')
     df['coordinates'] = df['coordinates'].apply(lambda x: ast.literal_eval(x))
     df['timestamps_list'] = df['timestamps_list'].apply(lambda x: ast.literal_eval(x))
-    df['geo_json'] = trip_layer(df)
+    #df['geo_json'] = trip_layer(df)
     return df
 
 
@@ -53,26 +54,23 @@ with col1:
     df['Markt'] = df['coordinates'].apply(lambda x: point_of_interest(x,point=Markt,radius=radius))
     map_point = pd.DataFrame({'Name': ['Mainzer Marktfrühstück'], 'lon': [Markt[0]], 'lat': [Markt[1]], 'Radius': radius})
 
+    if tog.st_toggle_switch(label="Nur Fahrten im Zusammenhang mit dem Markt anzeigen", key="Key1", default_value=False, label_after = False):#, inactive_color = '#D3D3D3', active_color="#11567f", track_color="#29B5E8")
+        df = df[df['Markt'] != 'Weder/noch']
+    else:
+        pass
+
     # Gesamtverteilung
     base = alt.Chart(df).encode(
                     x=('count(Markt):Q'),
                     y='Markt',
                     color=alt.Color('Markt:N', scale=alt.Scale(range=colors)),
                     tooltip=[alt.Tooltip('count():Q', title='Anzahl Fahrten')]
-                ).properties(height=300)
+                ).properties(height=400)
     fig = base.mark_bar() + base.mark_text(align='left',dx=2)
     st.altair_chart(fig, theme="streamlit", use_container_width=True)
 
 
-    # Stundenübersicht
-    fig_2 = alt.Chart(df).mark_bar(size=14, opacity=0.8).encode(
-            x='hour',
-            y='count(hour)',
-            color=alt.Color('Markt:N', scale=alt.Scale(range=colors), legend=None),
-            order=alt.Order('Markt'),
-            tooltip=[alt.Tooltip('hour:Q', title='Uhrzeit'), alt.Tooltip('count():Q', title='Anzahl Fahrten')])
-    st.altair_chart(fig_2, theme="streamlit", use_container_width=True)
-
+    
 
 with col2:
     col21, col22 = st.columns([1,1])
@@ -120,7 +118,17 @@ with col2:
 
         st_data = st_folium(map, height=250, width=250)
 
-    map_2 = KeplerGl(height=500, data={'Scooter': df, 'Markt': map_point}, config=config)
-    keplergl_static(map_2)
+    #map_2 = KeplerGl(height=500, data={'Scooter': df, 'Markt': map_point}, config=config)
+    #keplergl_static(map_2)
+    # Stundenübersicht
+    fig_2 = alt.Chart(df).mark_bar(size=14, opacity=0.8).encode(
+            x='hour',
+            y='count(hour)',
+            color=alt.Color('Markt:N', scale=alt.Scale(range=colors), legend=None),
+            order=alt.Order('Markt'),
+            tooltip=[alt.Tooltip('hour:Q', title='Uhrzeit'), alt.Tooltip('count():Q', title='Anzahl Fahrten')]
+            ).properties(height=300)
+    st.altair_chart(fig_2, theme="streamlit", use_container_width=True)
 
-#st.dataframe(df)
+
+st.dataframe(df)
